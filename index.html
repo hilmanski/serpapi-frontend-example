@@ -7,7 +7,7 @@
 </head>
 <body>
     <script>
-        fetch('http://localhost:3000/test')
+        fetch('http://localhost:3000/?query=tea')
         .then(response => response.json())
         .then(data => console.log(data));
     </script>

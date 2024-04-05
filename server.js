@@ -2,33 +2,34 @@ const http = require('http');
 const { getJson } = require("serpapi");
 require('dotenv').config();
 
-const server = http.createServer((req, res) => {
 
+const server = http.createServer(async (req, res) => {
     // Set CORS headers
-    const allowed_domain = 'http://127.0.0.1:5500' // Adjust with your domain or localhost port
+    const allowed_domain = '*' // Adjust with your domain or localhost port
     res.setHeader('Access-Control-Allow-Origin', allowed_domain);
     res.setHeader('Access-Control-Allow-Methods', 'GET');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    if (req.url === '/test' && req.method === 'GET') {
-        
-        return getJson({
-            api_key: process.env.SERPAPI_API_KEY,
+    // read query parameters
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const searchParams = url.searchParams;
+    const query = searchParams.get('query');
+
+    try {
+        const response = await getJson({
             engine: "google",
-            q: "Coffee",
-            location: "Austin, Texas, United States",
-            google_domain: "google.com",
-            gl: "us",
-            hl: "en"
-        }, (json) => {
-            console.log(json);
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(json));
+            api_key: process.env.SERPAPI_API_KEY,
+            q: query, 
+            location: "Austin, Texas",
         });
 
-    } else {
-        res.writeHead(404);
-        res.end('Not Found');
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(response));
+    } catch (error) {
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: error.message }));
     }
 });
 
